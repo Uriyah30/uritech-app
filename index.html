@@ -34,6 +34,10 @@
   a.tarjeta.soportes .nombre{color:var(--rojo-600);}
   a.tarjeta.mantenimientos .nombre{color:#6a3fb5;}
   a.tarjeta .desc{font-size:13px;color:var(--gris-600);margin-top:4px;}
+  a.tarjeta.respaldo{border-left-color:#2e8b57;cursor:pointer;}
+  a.tarjeta.respaldo .nombre{color:#2e8b57;}
+  a.tarjeta.respaldo.cargando{opacity:0.6;pointer-events:none;}
+  #msgRespaldo{font-size:12px;color:var(--gris-600);margin-top:-6px;margin-bottom:10px;min-height:16px;}
 </style>
 </head>
 <body>
@@ -53,6 +57,117 @@
       <div class="nombre">Mantenimientos</div>
       <div class="desc">Registrar mantenimientos lógicos y físicos</div>
     </a>
+    <a class="tarjeta respaldo" id="btnRespaldo">
+      <div class="nombre">⬇ Respaldo (Excel)</div>
+      <div class="desc">Descargar todas las facturas, soportes y mantenimientos en un archivo</div>
+    </a>
   </div>
+  <div id="msgRespaldo"></div>
+
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyAEWFJpTaoVFf4MjVvRQ3mMTZz0Jvh63TU",
+    authDomain: "uritech-1c18f.firebaseapp.com",
+    projectId: "uritech-1c18f",
+    storageBucket: "uritech-1c18f.firebasestorage.app",
+    messagingSenderId: "719308719213",
+    appId: "1:719308719213:web:44b334b93522d3ad7eeb64"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+
+  function formatoFecha(iso){
+    if(!iso) return "";
+    try{ return new Date(iso).toLocaleString('es-CO'); }catch(e){ return iso; }
+  }
+
+  async function exportarRespaldo(){
+    const btn = document.getElementById('btnRespaldo');
+    const msg = document.getElementById('msgRespaldo');
+    btn.classList.add('cargando');
+    msg.textContent = "Generando respaldo...";
+    try{
+      // ---- Facturas ----
+      const facturasSnap = await db.collection('facturas').orderBy('guardadoEn','desc').get();
+      const filasFacturas = [];
+      const filasItemsFactura = [];
+      facturasSnap.forEach(doc=>{
+        const d = doc.data();
+        const datos = d.datos || {};
+        filasFacturas.push({
+          "N. Factura": datos.numero || d.clave || "",
+          "Fecha": datos.fecha || "",
+          "Cliente": datos.cliente || "",
+          "Ciudad": datos.ciudad || "",
+          "Dirección": datos.direccion || "",
+          "Teléfono": datos.telefono || "",
+          "Vendedor": datos.vendedor || "",
+          "Total": d.total || "",
+          "Guardado en": formatoFecha(d.guardadoEn)
+        });
+        (datos.items || []).forEach(it=>{
+          const cant = parseFloat(it.cantidad) || 0;
+          const precio = parseFloat(it.precio) || 0;
+          filasItemsFactura.push({
+            "N. Factura": datos.numero || d.clave || "",
+            "Código": it.codigo || "",
+            "Descripción": it.descripcion || "",
+            "Concepto": it.unidad || "",
+            "Cantidad": cant,
+            "Precio unit.": precio,
+            "Total línea": cant*precio
+          });
+        });
+      });
+
+      // ---- Soportes ----
+      const soportesDoc = await db.collection('estado').doc('soportes').get();
+      const filasSoportes = (soportesDoc.exists ? (soportesDoc.data().items || []) : []).map(it=>({
+        "Cliente": it.cliente || "",
+        "Equipo": it.equipo || "",
+        "Problema": it.problema || "",
+        "Fecha": it.fecha || "",
+        "Estado": it.estado || "",
+        "Técnico": it.tecnico || "",
+        "Observaciones": it.obs || ""
+      }));
+
+      // ---- Mantenimientos ----
+      const mantDoc = await db.collection('estado').doc('mantenimientos').get();
+      const filasMant = (mantDoc.exists ? (mantDoc.data().items || []) : []).map(it=>({
+        "Cliente": it.cliente || "",
+        "Ciudad/Sede": it.ciudad || "",
+        "Equipo": it.equipo || "",
+        "Tipo": it.tipo || "",
+        "Fecha realizado": it.fechaReal || "",
+        "Próximo": it.fechaProx || "",
+        "Técnico": it.tecnico || "",
+        "Observaciones": it.obs || ""
+      }));
+
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(filasFacturas), "Facturas");
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(filasItemsFactura), "Detalle Facturas");
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(filasSoportes), "Soportes");
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(filasMant), "Mantenimientos");
+
+      const hoy = new Date().toISOString().slice(0,10);
+      XLSX.writeFile(wb, `Respaldo_UrITech_${hoy}.xlsx`);
+      msg.textContent = "Respaldo descargado ✓";
+    }catch(e){
+      console.error(e);
+      msg.textContent = "";
+      alert("No se pudo generar el respaldo. Revisa tu conexión a internet e intenta de nuevo.");
+    }finally{
+      btn.classList.remove('cargando');
+      setTimeout(()=>{ msg.textContent = ""; }, 3000);
+    }
+  }
+
+  document.getElementById('btnRespaldo').addEventListener('click', exportarRespaldo);
+</script>
 </body>
 </html>
