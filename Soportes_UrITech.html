@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>UR ITECH · Soportes Pendientes</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#1660a8">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Soportes UR ITECH">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-192.png">
+<link rel="manifest" href="manifest-soportes.webmanifest">
+<style>
+  :root{
+    --azul-900:#1660a8;
+    --azul-700:#1a6fbf;
+    --azul-500:#2f8ad6;
+    --rojo-600:#d62b2b;
+    --rojo-500:#e24444;
+    --gris-100:#f4f6f9;
+    --gris-200:#e7ebf1;
+    --gris-400:#c7d0dc;
+    --gris-600:#5b6b7f;
+    --texto:#16233a;
+    --blanco:#ffffff;
+    --verde:#1c7a4d;
+    --naranja:#e8821a;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--gris-100);
+    font-family:'Segoe UI',-apple-system,BlinkMacSystemFont,Roboto,Arial,sans-serif;
+    color:var(--texto);
+    padding:28px 16px 60px;
+  }
+
+  .toolbar{
+    max-width:1100px;margin:0 auto 18px;display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end;
+  }
+  .toolbar button{
+    border:none;border-radius:8px;padding:10px 18px;font-size:14px;font-weight:600;cursor:pointer;
+    transition:transform .12s ease;
+  }
+  .toolbar button:active{transform:translateY(1px);}
+  .btn-primary{background:var(--rojo-600);color:#fff;}
+  .btn-primary:hover{background:var(--rojo-500);}
+  .btn-ghost{background:var(--blanco);color:var(--azul-700);border:1px solid var(--gris-400)!important;}
+  .btn-ghost:hover{background:var(--gris-200);}
+
+  .hoja{
+    max-width:1100px;margin:0 auto;background:var(--blanco);border-radius:14px;overflow:hidden;
+    box-shadow:0 10px 30px rgba(13,43,82,0.12);
+  }
+
+  /* HEADER (igual a la factura) */
+  .encabezado{display:flex;align-items:stretch;min-height:110px;}
+  .marca{flex:1.1;background:var(--blanco);display:flex;align-items:center;gap:12px;padding:20px 28px;}
+  .logo-mark{height:56px;width:auto;flex-shrink:0;object-fit:contain;}
+  .marca-texto .nombre{font-size:22px;font-weight:800;color:var(--azul-900);letter-spacing:.3px;line-height:1.1;}
+  .marca-texto .slogan{font-size:10.5px;letter-spacing:1.5px;color:var(--gris-600);font-weight:600;text-transform:uppercase;}
+  .marca-texto .nit{font-size:10.5px;color:var(--gris-600);font-weight:600;margin-top:3px;letter-spacing:.3px;}
+  .titulo-factura{
+    flex:0.9;background:linear-gradient(120deg, var(--azul-900) 0%, var(--rojo-600) 100%);
+    clip-path:polygon(14% 0,100% 0,100% 100%,0% 100%);
+    display:flex;align-items:center;justify-content:flex-end;padding:0 34px;
+  }
+  .titulo-factura span{color:#fff;font-size:26px;font-weight:800;letter-spacing:1.5px;text-align:right;line-height:1.15;}
+
+  /* RESUMEN / CONTADORES */
+  .resumen{
+    display:grid;grid-template-columns:repeat(4,1fr);
+    border-top:1px solid var(--gris-200);border-bottom:2px solid var(--azul-900);
+  }
+  .resumen .tarjeta{
+    padding:14px 18px;text-align:center;cursor:pointer;border-right:1px solid var(--gris-200);
+    transition:background .12s ease;
+  }
+  .resumen .tarjeta:last-child{border-right:none;}
+  .resumen .tarjeta:hover{background:var(--gris-100);}
+  .resumen .tarjeta.activa{background:var(--gris-100);box-shadow:inset 0 -3px 0 var(--azul-900);}
+  .resumen .numero{font-size:22px;font-weight:800;color:var(--azul-900);}
+  .resumen .etiqueta{font-size:11px;color:var(--gris-600);letter-spacing:.4px;text-transform:uppercase;font-weight:600;margin-top:2px;}
+
+  /* TABLA */
+  .tabla-wrap{padding:22px 28px 6px;overflow-x:auto;}
+  table{width:100%;border-collapse:collapse;font-size:13px;min-width:900px;}
+  thead th{
+    background:var(--azul-900);color:#fff;font-size:11px;letter-spacing:.4px;text-transform:uppercase;
+    padding:10px 8px;text-align:left;font-weight:700;white-space:nowrap;
+  }
+  tbody td{padding:9px 8px;border-bottom:1px solid var(--gris-200);vertical-align:top;}
+  tbody tr:nth-child(even){background:var(--gris-100);}
+  tbody tr.oculta{display:none;}
+  td[contenteditable]{cursor:text;min-width:20px;}
+  td.id-col{color:var(--gris-600);font-weight:600;width:34px;}
+  input.fecha-input{
+    border:none;background:transparent;font-family:inherit;font-size:13px;color:var(--texto);width:120px;
+  }
+  input.fecha-input:focus{outline:none;background:#fff8ef;border-radius:4px;}
+
+  select.estado-select{
+    border:none;border-radius:14px;padding:5px 10px;font-size:12px;font-weight:700;
+    cursor:pointer;color:#fff;font-family:inherit;
+  }
+  select.estado-select.pendiente{background:var(--rojo-600);}
+  select.estado-select.proceso{background:var(--naranja);}
+  select.estado-select.resuelto{background:var(--verde);}
+
+  .fila-borrar{text-align:center;width:30px;color:#b23b2e;cursor:pointer;font-weight:700;opacity:.55;}
+  .fila-borrar:hover{opacity:1;}
+
+  .agregar-fila{
+    margin:10px 0 20px;background:none;border:1.5px dashed var(--gris-400);color:var(--azul-700);
+    padding:8px 14px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;
+  }
+  .agregar-fila:hover{border-color:var(--rojo-600);color:var(--rojo-600);}
+
+  .franja-final{height:8px;background:linear-gradient(90deg,var(--azul-900),var(--rojo-600));}
+
+  .guardado-msg{max-width:1100px;margin:10px auto 0;text-align:right;font-size:12px;color:var(--verde);height:16px;}
+
+  @media (max-width:640px){
+    body{padding:14px 8px 40px;}
+    .encabezado{flex-direction:column;min-height:auto;}
+    .titulo-factura{clip-path:none;padding:14px 20px;justify-content:flex-start;}
+    .resumen{grid-template-columns:repeat(2,1fr);}
+    .resumen .tarjeta:nth-child(2){border-right:none;}
+    .tabla-wrap{padding:16px 12px 6px;}
+    .toolbar{flex-direction:column;align-items:stretch;}
+    .toolbar button{width:100%;padding:13px 18px;font-size:15px;}
+    input, select, td[contenteditable]{font-size:16px!important;}
+  }
+
+  @media print{
+    @page{size:landscape;margin:10mm;}
+    *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;color-adjust:exact!important;}
+    body{background:#fff;padding:0;}
+    .toolbar, .agregar-fila, .fila-borrar, .guardado-msg{display:none!important;}
+    .hoja{box-shadow:none;border-radius:0;max-width:100%;}
+    td[contenteditable], input, select{border:none!important;-webkit-appearance:none;appearance:none;}
+    tbody tr.oculta{display:none;}
+    .resumen{padding:0;}
+    .resumen .tarjeta{padding:6px 10px;}
+    .resumen .numero{font-size:16px;}
+    .resumen .etiqueta{font-size:9px;margin-top:0;}
+    .tabla-wrap{padding:10px 14px 4px;overflow:visible;}
+    table{min-width:0!important;width:100%!important;font-size:10.5px;table-layout:fixed;}
+    thead th{padding:5px 4px;font-size:9px;white-space:normal;}
+    tbody td{padding:5px 4px;}
+    select.estado-select{padding:2px 6px;font-size:10px;}
+    tr{page-break-inside:avoid;}
+  }
+</style>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyAEWFJpTaoVFf4MjVvRQ3mMTZz0Jvh63TU",
+    authDomain: "uritech-1c18f.firebaseapp.com",
+    projectId: "uritech-1c18f",
+    storageBucket: "uritech-1c18f.firebasestorage.app",
+    messagingSenderId: "719308719213",
+    appId: "1:719308719213:web:44b334b93522d3ad7eeb64"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+  db.enablePersistence().catch(function(){});
+</script>
+</head>
+<body>
+
+<div class="toolbar">
+  <button class="btn-ghost" onclick="agregarFila()">+ Fila</button>
+  <button class="btn-ghost" onclick="guardarLocal()">Guardar</button>
+  <button class="btn-primary" onclick="window.print()">Imprimir / PDF</button>
+</div>
+
+<div class="hoja" id="hoja">
+
+  <div class="encabezado">
+    <div class="marca">
+      <img class="logo-mark" src="logo.png" alt="UR ITECH">
+      <div class="marca-texto">
+        <div class="nombre">UR ITECH</div>
+        <div class="slogan">Soporte de impresoras y computadores</div>
+        <div class="nit">NIT: 1017122872-2</div>
+      </div>
+    </div>
+    <div class="titulo-factura"><span>SOPORTES<br>PENDIENTES</span></div>
+  </div>
+
+  <div class="resumen">
+    <div class="tarjeta activa" data-filtro="todos" onclick="filtrar('todos')">
+      <div class="numero" id="contTodos">0</div>
+      <div class="etiqueta">Todos</div>
+    </div>
+    <div class="tarjeta" data-filtro="pendiente" onclick="filtrar('pendiente')">
+      <div class="numero" id="contPendiente">0</div>
+      <div class="etiqueta">Pendientes</div>
+    </div>
+    <div class="tarjeta" data-filtro="proceso" onclick="filtrar('proceso')">
+      <div class="numero" id="contProceso">0</div>
+      <div class="etiqueta">En proceso</div>
+    </div>
+    <div class="tarjeta" data-filtro="resuelto" onclick="filtrar('resuelto')">
+      <div class="numero" id="contResuelto">0</div>
+      <div class="etiqueta">Resueltos</div>
+    </div>
+  </div>
+
+  <div class="tabla-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th style="width:34px;">ID</th>
+          <th style="width:140px;">Cliente</th>
+          <th style="width:140px;">Equipo</th>
+          <th>Problema reportado</th>
+          <th style="width:120px;">Fecha ingreso</th>
+          <th style="width:110px;">Estado</th>
+          <th style="width:110px;">Técnico</th>
+          <th style="width:160px;">Observaciones</th>
+          <th style="width:24px;"></th>
+        </tr>
+      </thead>
+      <tbody id="cuerpoTabla"></tbody>
+    </table>
+    <button class="agregar-fila" onclick="agregarFila()">+ Agregar soporte</button>
+  </div>
+
+  <div class="franja-final"></div>
+</div>
+
+<div class="guardado-msg" id="msgGuardado"></div>
+
+<script>
+let contadorId = 0;
+let filtroActivo = 'todos';
+
+function claseEstado(valor){
+  if(valor === 'En proceso') return 'proceso';
+  if(valor === 'Resuelto') return 'resuelto';
+  return 'pendiente';
+}
+
+function filaHTML(cliente, equipo, problema, fecha, estado, tecnico, obs){
+  contadorId++;
+  estado = estado || 'Pendiente';
+  return `<tr data-id="${contadorId}" data-estado="${estado}">
+    <td class="id-col">${contadorId}</td>
+    <td contenteditable="true">${cliente}</td>
+    <td contenteditable="true">${equipo}</td>
+    <td contenteditable="true">${problema}</td>
+    <td><input class="fecha-input" type="date" value="${fecha}" onchange="guardarSilencioso()"></td>
+    <td>
+      <select class="estado-select ${claseEstado(estado)}" onchange="cambiarEstado(this)">
+        <option value="Pendiente" ${estado==='Pendiente'?'selected':''}>Pendiente</option>
+        <option value="En proceso" ${estado==='En proceso'?'selected':''}>En proceso</option>
+        <option value="Resuelto" ${estado==='Resuelto'?'selected':''}>Resuelto</option>
+      </select>
+    </td>
+    <td contenteditable="true">${tecnico}</td>
+    <td contenteditable="true">${obs}</td>
+    <td class="fila-borrar" onclick="borrarFila(this)">✕</td>
+  </tr>`;
+}
+
+function agregarFila(cliente="", equipo="", problema="", fecha="", estado="Pendiente", tecnico="", obs=""){
+  document.getElementById('cuerpoTabla').insertAdjacentHTML('beforeend',
+    filaHTML(cliente, equipo, problema, fecha, estado, tecnico, obs));
+  actualizarContadores();
+  guardarSilencioso();
+}
+
+function borrarFila(celda){
+  if(!confirm("¿Eliminar este soporte de la lista?")) return;
+  celda.closest('tr').remove();
+  actualizarContadores();
+  guardarSilencioso();
+}
+
+function cambiarEstado(select){
+  const fila = select.closest('tr');
+  const valor = select.value;
+  fila.dataset.estado = valor;
+  select.className = 'estado-select ' + claseEstado(valor);
+  actualizarContadores();
+  aplicarFiltro();
+  guardarSilencioso();
+}
+
+function actualizarContadores(){
+  const filas = document.querySelectorAll('#cuerpoTabla tr');
+  let pendiente=0, proceso=0, resuelto=0;
+  filas.forEach(f=>{
+    const e = f.dataset.estado;
+    if(e === 'En proceso') proceso++;
+    else if(e === 'Resuelto') resuelto++;
+    else pendiente++;
+  });
+  document.getElementById('contTodos').textContent = filas.length;
+  document.getElementById('contPendiente').textContent = pendiente;
+  document.getElementById('contProceso').textContent = proceso;
+  document.getElementById('contResuelto').textContent = resuelto;
+}
+
+function filtrar(tipo){
+  filtroActivo = tipo;
+  document.querySelectorAll('.resumen .tarjeta').forEach(t=>{
+    t.classList.toggle('activa', t.dataset.filtro === tipo);
+  });
+  aplicarFiltro();
+}
+
+function aplicarFiltro(){
+  const mapa = {pendiente:'Pendiente', proceso:'En proceso', resuelto:'Resuelto'};
+  document.querySelectorAll('#cuerpoTabla tr').forEach(f=>{
+    if(filtroActivo === 'todos'){
+      f.classList.remove('oculta');
+    } else {
+      f.classList.toggle('oculta', f.dataset.estado !== mapa[filtroActivo]);
+    }
+  });
+}
+
+function recogerDatos(){
+  const items = [];
+  document.querySelectorAll('#cuerpoTabla tr').forEach(fila=>{
+    const celdas = fila.querySelectorAll('td');
+    items.push({
+      cliente: celdas[1].textContent,
+      equipo: celdas[2].textContent,
+      problema: celdas[3].textContent,
+      fecha: fila.querySelector('.fecha-input').value,
+      estado: fila.dataset.estado,
+      tecnico: celdas[6].textContent,
+      obs: celdas[7].textContent
+    });
+  });
+  return items;
+}
+
+let aplicandoRemoto = false;
+let escribiendoLocal = false;
+let temporizadorEscritura = null;
+
+function guardarSilencioso(){
+  if(aplicandoRemoto) return;
+  const items = recogerDatos();
+  localStorage.setItem('uritech_soportes', JSON.stringify(items));
+  escribiendoLocal = true;
+  clearTimeout(temporizadorEscritura);
+  temporizadorEscritura = setTimeout(()=>{ escribiendoLocal = false; }, 3000);
+  db.collection('estado').doc('soportes').set({
+    items: items,
+    actualizadoEn: new Date().toISOString()
+  }).catch(e=>{ console.error(e); });
+}
+
+function guardarLocal(){
+  const items = recogerDatos();
+  localStorage.setItem('uritech_soportes', JSON.stringify(items));
+  const msg = document.getElementById('msgGuardado');
+  msg.textContent = "Guardando...";
+  db.collection('estado').doc('soportes').set({
+    items: items,
+    actualizadoEn: new Date().toISOString()
+  }).then(()=>{
+    msg.textContent = "Guardado en la nube ✓";
+    setTimeout(()=>{ msg.textContent = ""; }, 1800);
+  }).catch(e=>{
+    console.error(e);
+    msg.textContent = "";
+    alert("Se guardó en este dispositivo, pero no se pudo subir a la nube. Revisa tu conexión a internet e intenta de nuevo.");
+  });
+}
+
+function cargarDesdeItems(items){
+  aplicandoRemoto = true;
+  document.getElementById('cuerpoTabla').innerHTML = "";
+  contadorId = 0;
+  if(!items || items.length === 0){
+    agregarFila("Carolina Consulcom", "PC escritorio", "No enciende, posible fuente dañada", new Date().toISOString().slice(0,10), "Pendiente", "Jorge Benítez", "");
+  } else {
+    items.forEach(it=>{
+      agregarFila(it.cliente, it.equipo, it.problema, it.fecha, it.estado, it.tecnico, it.obs);
+    });
+  }
+  actualizarContadores();
+  aplicarFiltro();
+  aplicandoRemoto = false;
+}
+
+function cargarLocal(){
+  db.collection('estado').doc('soportes').onSnapshot(doc=>{
+    // Evita recargar la tabla justo mientras el usuario está escribiendo en este mismo dispositivo
+    if(escribiendoLocal) return;
+    if(doc.exists){
+      cargarDesdeItems(doc.data().items);
+    } else {
+      cargarDesdeItems([]);
+      guardarSilencioso();
+    }
+  }, e=>{
+    console.error(e);
+    const guardado = localStorage.getItem('uritech_soportes');
+    cargarDesdeItems(guardado ? JSON.parse(guardado) : []);
+  });
+}
+
+// listeners para contenteditable (guardar al salir de la celda)
+document.addEventListener('focusout', (e)=>{
+  if(e.target.closest('#cuerpoTabla') && e.target.hasAttribute('contenteditable')){
+    guardarSilencioso();
+  }
+});
+
+window.addEventListener('load', ()=>{
+  cargarLocal();
+  actualizarContadores();
+});
+</script>
+
+
+<script>
+(function(){
+  if('serviceWorker' in navigator && location.protocol !== 'file:'){
+    try{
+      var swCode = "self.addEventListener('install',function(e){self.skipWaiting();});" +
+        "self.addEventListener('activate',function(e){self.clients.claim();});" +
+        "self.addEventListener('fetch',function(e){e.respondWith(fetch(e.request).catch(function(){return caches.match(e.request);}));});";
+      var blob = new Blob([swCode], {type:'application/javascript'});
+      var swUrl = URL.createObjectURL(blob);
+      navigator.serviceWorker.register(swUrl).catch(function(){});
+    }catch(e){}
+  }
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>UR ITECH · Apps</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#1660a8">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="UR ITECH">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-192.png">
+<link rel="manifest" href="manifest-index.webmanifest">
+<style>
+  :root{
+    --azul-900:#1660a8; --rojo-600:#d62b2b; --gris-100:#f4f6f9; --gris-600:#5b6b7f; --texto:#16233a; --blanco:#fff;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--gris-100);font-family:'Segoe UI',-apple-system,BlinkMacSystemFont,Roboto,Arial,sans-serif;color:var(--texto);
+    padding:40px 16px;display:flex;flex-direction:column;align-items:center;}
+  .logo-mark{height:64px;width:auto;margin-bottom:10px;}
+  h1{font-size:20px;margin:0 0 4px;color:var(--azul-900);}
+  p.slogan{font-size:12px;letter-spacing:1.5px;color:var(--gris-600);text-transform:uppercase;margin:0 0 36px;font-weight:600;}
+  .tarjetas{display:flex;flex-direction:column;gap:16px;width:100%;max-width:360px;}
+  a.tarjeta{
+    display:block;background:var(--blanco);border-radius:14px;padding:22px 24px;text-decoration:none;color:var(--texto);
+    box-shadow:0 6px 20px rgba(13,43,82,0.1);border-left:6px solid var(--azul-900);transition:transform .12s ease;
+  }
+  a.tarjeta:active{transform:scale(0.98);}
+  a.tarjeta.soportes{border-left-color:var(--rojo-600);}
+  a.tarjeta.mantenimientos{border-left-color:#6a3fb5;}
+  a.tarjeta .nombre{font-size:17px;font-weight:800;color:var(--azul-900);}
+  a.tarjeta.soportes .nombre{color:var(--rojo-600);}
+  a.tarjeta.mantenimientos .nombre{color:#6a3fb5;}
+  a.tarjeta .desc{font-size:13px;color:var(--gris-600);margin-top:4px;}
+</style>
+</head>
+<body>
+  <img class="logo-mark" src="logo.png" alt="UR ITECH">
+  <h1>UR ITECH</h1>
+  <p class="slogan">Soporte de impresoras y computadores</p>
+  <div class="tarjetas">
+    <a class="tarjeta" href="Factura_UrITech.html">
+      <div class="nombre">Factura</div>
+      <div class="desc">Generar facturas de venta y soporte</div>
+    </a>
+    <a class="tarjeta soportes" href="Soportes_UrITech.html">
+      <div class="nombre">Soportes</div>
+      <div class="desc">Gestionar soportes técnicos pendientes</div>
+    </a>
+    <a class="tarjeta mantenimientos" href="Mantenimientos_UrITech.html">
+      <div class="nombre">Mantenimientos</div>
+      <div class="desc">Registrar mantenimientos lógicos y físicos</div>
+    </a>
+  </div>
+</body>
+</html>
