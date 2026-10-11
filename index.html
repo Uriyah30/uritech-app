@@ -30,9 +30,11 @@
   a.tarjeta:active{transform:scale(0.98);}
   a.tarjeta.soportes{border-left-color:var(--rojo-600);}
   a.tarjeta.mantenimientos{border-left-color:#6a3fb5;}
+  a.tarjeta.taller{border-left-color:#e8821a;}
   a.tarjeta .nombre{font-size:17px;font-weight:800;color:var(--azul-900);}
   a.tarjeta.soportes .nombre{color:var(--rojo-600);}
   a.tarjeta.mantenimientos .nombre{color:#6a3fb5;}
+  a.tarjeta.taller .nombre{color:#e8821a;}
   a.tarjeta .desc{font-size:13px;color:var(--gris-600);margin-top:4px;}
   a.tarjeta.respaldo{border-left-color:#2e8b57;cursor:pointer;}
   a.tarjeta.respaldo .nombre{color:#2e8b57;}
@@ -41,6 +43,17 @@
 </style>
 </head>
 <body>
+<div id="loginOverlay" style="position:fixed;inset:0;z-index:99999;background:#f4f6f9;display:flex;align-items:center;justify-content:center;padding:20px;font-family:'Segoe UI',-apple-system,BlinkMacSystemFont,Roboto,Arial,sans-serif;">
+  <form id="loginForm" style="background:#fff;border-radius:14px;padding:32px 28px;max-width:320px;width:100%;box-shadow:0 10px 30px rgba(13,43,82,0.15);text-align:center;">
+    <img src="logo.png" alt="UR ITECH" style="height:48px;margin-bottom:18px;">
+    <h2 style="margin:0 0 18px;font-size:16px;color:#1660a8;">Iniciar sesión</h2>
+    <input type="email" id="loginEmail" placeholder="Correo" autocomplete="username" required style="width:100%;padding:10px 12px;margin-bottom:10px;border:1px solid #ccd3dd;border-radius:8px;font-size:14px;box-sizing:border-box;">
+    <input type="password" id="loginPassword" placeholder="Contraseña" autocomplete="current-password" required style="width:100%;padding:10px 12px;margin-bottom:14px;border:1px solid #ccd3dd;border-radius:8px;font-size:14px;box-sizing:border-box;">
+    <button type="submit" style="width:100%;padding:11px;background:#1660a8;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;">Entrar</button>
+    <div id="loginError" style="color:#d62b2b;font-size:12px;margin-top:10px;min-height:16px;"></div>
+  </form>
+</div>
+<button id="btnLogout" title="Cerrar sesión" style="position:fixed;top:8px;right:8px;z-index:9998;background:#fff;border:1px solid #ccd3dd;border-radius:20px;padding:5px 12px;font-size:11px;color:#5b6b7f;cursor:pointer;display:none;">Cerrar sesión</button>
   <img class="logo-mark" src="logo.png" alt="UR ITECH">
   <h1>UR ITECH</h1>
   <p class="slogan">Soporte de impresoras y computadores</p>
@@ -57,6 +70,10 @@
       <div class="nombre">Mantenimientos</div>
       <div class="desc">Registrar mantenimientos lógicos y físicos</div>
     </a>
+    <a class="tarjeta taller" href="Taller_UrITech.html">
+      <div class="nombre">Taller</div>
+      <div class="desc">Equipos que ingresan al taller para reparación</div>
+    </a>
     <a class="tarjeta respaldo" id="btnRespaldo">
       <div class="nombre">⬇ Respaldo (Excel)</div>
       <div class="desc">Descargar todas las facturas, soportes y mantenimientos en un archivo</div>
@@ -66,6 +83,7 @@
 
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
   const firebaseConfig = {
@@ -78,6 +96,8 @@
   };
   firebase.initializeApp(firebaseConfig);
   const db = firebase.firestore();
+  const auth = firebase.auth();
+  auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(function(){});
 
   function formatoFecha(iso){
     if(!iso) return "";
@@ -148,11 +168,27 @@
         "Observaciones": it.obs || ""
       }));
 
+      // ---- Taller ----
+      const tallerDoc = await db.collection('estado').doc('taller').get();
+      const filasTaller = (tallerDoc.exists ? (tallerDoc.data().items || []) : []).map(it=>({
+        "Cliente": it.cliente || "",
+        "Teléfono": it.telefono || "",
+        "Equipo": it.equipo || "",
+        "Falla reportada": it.falla || "",
+        "Fecha ingreso": it.fechaIngreso || "",
+        "Estado": it.estado || "",
+        "Costo": it.costo || "",
+        "Técnico": it.tecnico || "",
+        "Fecha entrega": it.fechaEntrega || "",
+        "Observaciones": it.obs || ""
+      }));
+
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(filasFacturas), "Facturas");
       XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(filasItemsFactura), "Detalle Facturas");
       XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(filasSoportes), "Soportes");
       XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(filasMant), "Mantenimientos");
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(filasTaller), "Taller");
 
       const hoy = new Date().toISOString().slice(0,10);
       XLSX.writeFile(wb, `Respaldo_UrITech_${hoy}.xlsx`);
@@ -168,6 +204,34 @@
   }
 
   document.getElementById('btnRespaldo').addEventListener('click', exportarRespaldo);
+</script>
+
+<script>
+  document.getElementById('loginForm').addEventListener('submit', function(e){
+    e.preventDefault();
+    var email = document.getElementById('loginEmail').value.trim();
+    var pass = document.getElementById('loginPassword').value;
+    var err = document.getElementById('loginError');
+    err.textContent = "Entrando...";
+    auth.signInWithEmailAndPassword(email, pass).catch(function(error){
+      err.textContent = "Correo o contraseña incorrectos.";
+    });
+  });
+  document.getElementById('btnLogout').addEventListener('click', function(){
+    auth.signOut();
+  });
+  auth.onAuthStateChanged(function(user){
+    var overlay = document.getElementById('loginOverlay');
+    var logoutBtn = document.getElementById('btnLogout');
+    if(user){
+      overlay.style.display = 'none';
+      logoutBtn.style.display = 'block';
+      if(typeof iniciarApp === 'function') iniciarApp();
+    } else {
+      overlay.style.display = 'flex';
+      logoutBtn.style.display = 'none';
+    }
+  });
 </script>
 </body>
 </html>
