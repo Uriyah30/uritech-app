@@ -31,10 +31,12 @@
   a.tarjeta.soportes{border-left-color:var(--rojo-600);}
   a.tarjeta.mantenimientos{border-left-color:#6a3fb5;}
   a.tarjeta.taller{border-left-color:#e8821a;}
+  a.tarjeta.compras{border-left-color:#0f9b8e;}
   a.tarjeta .nombre{font-size:17px;font-weight:800;color:var(--azul-900);}
   a.tarjeta.soportes .nombre{color:var(--rojo-600);}
   a.tarjeta.mantenimientos .nombre{color:#6a3fb5;}
   a.tarjeta.taller .nombre{color:#e8821a;}
+  a.tarjeta.compras .nombre{color:#0f9b8e;}
   a.tarjeta .desc{font-size:13px;color:var(--gris-600);margin-top:4px;}
   a.tarjeta.respaldo{border-left-color:#2e8b57;cursor:pointer;}
   a.tarjeta.respaldo .nombre{color:#2e8b57;}
@@ -73,6 +75,10 @@
     <a class="tarjeta taller" href="Taller_UrITech.html">
       <div class="nombre">Taller</div>
       <div class="desc">Equipos que ingresan al taller para reparación</div>
+    </a>
+    <a class="tarjeta compras" href="Compras_UrITech.html">
+      <div class="nombre">Compras</div>
+      <div class="desc">Registrar compras a proveedores e insumos</div>
     </a>
     <a class="tarjeta respaldo" id="btnRespaldo">
       <div class="nombre">⬇ Respaldo (Excel)</div>
@@ -183,12 +189,30 @@
         "Observaciones": it.obs || ""
       }));
 
+      // ---- Compras ----
+      const comprasDoc = await db.collection('estado').doc('compras').get();
+      const filasCompras = (comprasDoc.exists ? (comprasDoc.data().items || []) : []).map(it=>{
+        const cant = parseFloat(it.cantidad) || 0;
+        const precio = parseFloat(it.precioUnitario) || 0;
+        return {
+          "Proveedor": it.proveedor || "",
+          "Producto": it.producto || "",
+          "Cantidad": cant,
+          "Precio unit.": precio,
+          "Total": cant*precio,
+          "Fecha compra": it.fecha || "",
+          "Categoría": it.categoria || "",
+          "Observaciones": it.obs || ""
+        };
+      });
+
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(filasFacturas), "Facturas");
       XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(filasItemsFactura), "Detalle Facturas");
       XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(filasSoportes), "Soportes");
       XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(filasMant), "Mantenimientos");
       XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(filasTaller), "Taller");
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(filasCompras), "Compras");
 
       const hoy = new Date().toISOString().slice(0,10);
       XLSX.writeFile(wb, `Respaldo_UrITech_${hoy}.xlsx`);
