@@ -446,13 +446,13 @@ function guardarLocal(){
   });
 }
 
-function cargarDesdeItems(items){
+function cargarDesdeItems(items, primeraVez){
   aplicandoRemoto = true;
   document.getElementById('cuerpoTabla').innerHTML = "";
   contadorId = 0;
-  if(!items || items.length === 0){
+  if(primeraVez){
     agregarFila("Carolina Consulcom", "Medellín", "PC escritorio", "Lógico", new Date().toISOString().slice(0,10), "", "Jorge Benítez", "");
-  } else {
+  } else if(items && items.length > 0){
     items.forEach(it=>{
       agregarFila(it.cliente, it.ciudad, it.equipo, it.tipo, it.fechaReal, it.fechaProx, it.tecnico, it.obs);
     });
@@ -466,15 +466,15 @@ function cargarLocal(){
   db.collection('estado').doc('mantenimientos').onSnapshot(doc=>{
     if(escribiendoLocal) return;
     if(doc.exists){
-      cargarDesdeItems(doc.data().items);
+      cargarDesdeItems(doc.data().items, false);
     } else {
-      cargarDesdeItems([]);
+      cargarDesdeItems([], true);
       guardarSilencioso();
     }
   }, e=>{
     console.error(e);
     const guardado = localStorage.getItem('uritech_mantenimientos');
-    cargarDesdeItems(guardado ? JSON.parse(guardado) : []);
+    cargarDesdeItems(guardado ? JSON.parse(guardado) : [], false);
   });
 }
 

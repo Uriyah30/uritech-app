@@ -421,13 +421,13 @@ function guardarLocal(){
   });
 }
 
-function cargarDesdeItems(items){
+function cargarDesdeItems(items, primeraVez){
   aplicandoRemoto = true;
   document.getElementById('cuerpoTabla').innerHTML = "";
   contadorId = 0;
-  if(!items || items.length === 0){
+  if(primeraVez){
     agregarFila("Carolina Consulcom", "300 123 4567", "Portátil HP 240", "No enciende, posible fuente dañada", new Date().toISOString().slice(0,10), "Recibido", "", "Jorge Benítez", "", "");
-  } else {
+  } else if(items && items.length > 0){
     items.forEach(it=>{
       agregarFila(it.cliente, it.telefono, it.equipo, it.falla, it.fechaIngreso, it.estado, it.costo, it.tecnico, it.fechaEntrega, it.obs);
     });
@@ -441,15 +441,15 @@ function cargarLocal(){
   db.collection('estado').doc('taller').onSnapshot(doc=>{
     if(escribiendoLocal) return;
     if(doc.exists){
-      cargarDesdeItems(doc.data().items);
+      cargarDesdeItems(doc.data().items, false);
     } else {
-      cargarDesdeItems([]);
+      cargarDesdeItems([], true);
       guardarSilencioso();
     }
   }, e=>{
     console.error(e);
     const guardado = localStorage.getItem('uritech_taller');
-    cargarDesdeItems(guardado ? JSON.parse(guardado) : []);
+    cargarDesdeItems(guardado ? JSON.parse(guardado) : [], false);
   });
 }
 

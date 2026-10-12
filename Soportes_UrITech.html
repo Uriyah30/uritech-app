@@ -392,13 +392,13 @@ function guardarLocal(){
   });
 }
 
-function cargarDesdeItems(items){
+function cargarDesdeItems(items, primeraVez){
   aplicandoRemoto = true;
   document.getElementById('cuerpoTabla').innerHTML = "";
   contadorId = 0;
-  if(!items || items.length === 0){
+  if(primeraVez){
     agregarFila("Carolina Consulcom", "PC escritorio", "No enciende, posible fuente dañada", new Date().toISOString().slice(0,10), "Pendiente", "Jorge Benítez", "");
-  } else {
+  } else if(items && items.length > 0){
     items.forEach(it=>{
       agregarFila(it.cliente, it.equipo, it.problema, it.fecha, it.estado, it.tecnico, it.obs);
     });
@@ -413,15 +413,15 @@ function cargarLocal(){
     // Evita recargar la tabla justo mientras el usuario está escribiendo en este mismo dispositivo
     if(escribiendoLocal) return;
     if(doc.exists){
-      cargarDesdeItems(doc.data().items);
+      cargarDesdeItems(doc.data().items, false);
     } else {
-      cargarDesdeItems([]);
+      cargarDesdeItems([], true);
       guardarSilencioso();
     }
   }, e=>{
     console.error(e);
     const guardado = localStorage.getItem('uritech_soportes');
-    cargarDesdeItems(guardado ? JSON.parse(guardado) : []);
+    cargarDesdeItems(guardado ? JSON.parse(guardado) : [], false);
   });
 }
 
