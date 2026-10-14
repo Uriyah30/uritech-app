@@ -66,6 +66,8 @@
   .btn-ghost{background:var(--blanco);color:var(--azul-700);border:1px solid var(--gris-400)!important;}
   .btn-ghost:hover{background:var(--gris-200);}
   .btn-danger{background:var(--blanco);color:#b23b2e;border:1px solid #e3b3ab!important;}
+  .btn-whatsapp{background:#25D366;color:#fff;}
+  .btn-whatsapp:hover{background:#1ebc5a;}
 
   .hoja{
     max-width:900px;
@@ -372,6 +374,8 @@
       <a href="Mantenimientos_UrITech.html">🔧 Mantenimientos</a>
       <a href="Taller_UrITech.html">🧰 Taller</a>
       <a href="Compras_UrITech.html">🛒 Compras</a>
+      <a href="Ganancia_UrITech.html">📈 Ganancia</a>
+      <a href="Clientes_UrITech.html">👤 Clientes</a>
     </div>
   </div>
   <button class="btn-ghost" onclick="agregarFila()">+ Fila</button>
@@ -380,6 +384,7 @@
   <button class="btn-ghost" onclick="abrirCodigos()">Códigos</button>
   <button class="btn-danger" onclick="nuevaFactura()">Nueva factura</button>
   <button class="btn-primary" onclick="window.print()">Imprimir / PDF</button>
+  <button class="btn-whatsapp" onclick="enviarWhatsApp()">📲 Enviar por WhatsApp</button>
 </div>
 
 <div class="hoja" id="hoja">
@@ -398,7 +403,7 @@
 
   <div class="meta">
     <div class="col">
-      <div class="campo fuerte"><label>Cliente:</label><input id="cliente" value="Carolina Consulcom"></div>
+      <div class="campo fuerte"><label>Cliente:</label><input id="cliente" value="Carolina Consulcom"><button type="button" class="btn-ghost" style="padding:4px 10px;font-size:12px;" onclick="abrirSelectorCliente()">👤</button></div>
       <div class="campo"><label>Ciudad:</label><input id="ciudad" value="Medellín"></div>
       <div class="campo"><label>Dirección:</label><input id="direccion" value=""></div>
       <div class="campo"><label>Teléfono:</label><input id="telefono" value="320 640 1529"></div>
@@ -514,6 +519,18 @@
   </div>
 </div>
 
+<div class="modal-fondo" id="modalClientes" onclick="cerrarSelectorClienteSiFondo(event)">
+  <div class="modal-caja">
+    <div class="modal-header">
+      <span>Elegir cliente guardado</span>
+      <span class="modal-cerrar" onclick="cerrarSelectorCliente()">✕</span>
+    </div>
+    <div class="modal-lista" id="listaClientes">
+      <p style="text-align:center;color:var(--gris-600);font-size:13px;padding:20px;">Cargando clientes...</p>
+    </div>
+  </div>
+</div>
+
 <script>
 let contadorId = 0;
 
@@ -560,6 +577,31 @@ function calcularTotales(){
   document.getElementById('subtotalTxt').textContent = formatoCOP(subtotal);
   document.getElementById('ivaTxt').textContent = formatoCOP(iva);
   document.getElementById('totalTxt').textContent = formatoCOP(total);
+}
+
+function enviarWhatsApp(){
+  calcularTotales();
+  const datos = recogerDatos();
+  let telefono = (datos.telefono || '').replace(/\D/g,'');
+  if(!telefono){
+    alert('Agrega el teléfono del cliente antes de enviar por WhatsApp.');
+    return;
+  }
+  if(telefono.length === 10) telefono = '57' + telefono; // prefijo Colombia
+
+  let mensaje = `Hola ${datos.cliente || ''}, te comparto tu factura *N.º ${datos.numero || ''}* de UR ITECH:\n\n`;
+  datos.items.forEach(it=>{
+    if(!it.descripcion) return;
+    const cant = it.cantidad || 0;
+    const precio = Number(it.precio || 0);
+    mensaje += `• ${it.descripcion} (${cant} x $${precio.toLocaleString('es-CO')})\n`;
+  });
+  mensaje += `\n*TOTAL A PAGAR: ${document.getElementById('totalTxt').textContent}*\n\n`;
+  mensaje += `Pagos a:\nNequi: ${datos.nequiNumero || ''}\nBancolombia: ${datos.bancolombiaNumero || ''}\n\n`;
+  mensaje += `¡Gracias por tu confianza! - UR ITECH`;
+
+  const url = `https://wa.me/${telefono}?text=${encodeURIComponent(mensaje)}`;
+  window.open(url, '_blank');
 }
 
 function recogerDatos(){
@@ -668,6 +710,53 @@ function cerrarCodigos(){
 
 function cerrarCodigosSiFondo(ev){
   if(ev.target.id === 'modalCodigos') cerrarCodigos();
+}
+
+function abrirSelectorCliente(){
+  const lista = document.getElementById('listaClientes');
+  lista.innerHTML = '<p style="text-align:center;color:var(--gris-600);font-size:13px;padding:20px;">Cargando clientes...</p>';
+  document.getElementById('modalClientes').classList.add('abierto');
+  db.collection('estado').doc('clientes').get().then(doc=>{
+    const items = doc.exists ? (doc.data().items || []) : [];
+    if(items.length === 0){
+      lista.innerHTML = '<div class="historial-vacio">Todavía no tienes clientes guardados. Agrégalos en el módulo "Clientes".</div>';
+      return;
+    }
+    lista.innerHTML = "";
+    items.forEach(it=>{
+      const div = document.createElement('div');
+      div.className = "item-historial";
+      div.style.cursor = "pointer";
+      div.innerHTML = `
+        <div class="info">
+          <b>${it.nombre || "(sin nombre)"}</b><br>
+          <span class="sub">${it.telefono || ""} ${it.ciudad ? "· " + it.ciudad : ""}</span>
+        </div>
+        <div class="acciones">
+          <button class="btn-abrir">Usar</button>
+        </div>`;
+      div.querySelector('.btn-abrir').addEventListener('click', ()=>{
+        document.getElementById('cliente').value = it.nombre || "";
+        document.getElementById('ciudad').value = it.ciudad || "";
+        document.getElementById('direccion').value = it.direccion || "";
+        document.getElementById('telefono').value = it.telefono || "";
+        cerrarSelectorCliente();
+        guardarLocal();
+      });
+      lista.appendChild(div);
+    });
+  }).catch(e=>{
+    console.error(e);
+    lista.innerHTML = '<div class="historial-vacio">No se pudo cargar la lista de clientes.</div>';
+  });
+}
+
+function cerrarSelectorCliente(){
+  document.getElementById('modalClientes').classList.remove('abierto');
+}
+
+function cerrarSelectorClienteSiFondo(ev){
+  if(ev.target.id === 'modalClientes') cerrarSelectorCliente();
 }
 
 function abrirDesdeHistorial(clave){
