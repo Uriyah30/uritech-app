@@ -371,6 +371,7 @@
     <div class="menu-dropdown" id="menuDropdown">
       <a href="index.html">🏠 Inicio</a>
       <a href="Factura_UrITech.html" class="activo">🧾 Factura</a>
+      <a href="Cotizaciones_UrITech.html">📝 Cotizaciones</a>
       <a href="Soportes_UrITech.html">🛠️ Soportes</a>
       <a href="Mantenimientos_UrITech.html">🔧 Mantenimientos</a>
       <a href="Taller_UrITech.html">🧰 Taller</a>
@@ -839,7 +840,27 @@ function cargarDatos(d){
   }
 }
 
+function cargarDesdeCotizacion(){
+  let p = null;
+  try{ p = JSON.parse(localStorage.getItem('uritech_desde_cotizacion') || 'null'); }catch(e){}
+  if(!p) return false;
+  localStorage.removeItem('uritech_desde_cotizacion');
+  siguienteNumeroFactura().then(num=>{
+    cargarDatos({
+      cliente: p.cliente, ciudad: p.ciudad, direccion: p.direccion, telefono: p.telefono,
+      numero: num, fecha: new Date().toISOString().slice(0,10), vencimiento: "", vendedor: "",
+      nequiNumero: p.nequiNumero, bancolombiaNumero: p.bancolombiaNumero, ivaPct: p.ivaPct,
+      observaciones: "Recibí a satisfacción.", items: p.items
+    });
+    const msg = document.getElementById('msgGuardado');
+    msg.textContent = "Cargado desde la cotización " + (p.desde || "") + " — revisa y guarda";
+    setTimeout(()=>{ msg.textContent = ""; }, 5000);
+  });
+  return true;
+}
+
 function cargarLocal(){
+  if(cargarDesdeCotizacion()) return;
   const guardado = localStorage.getItem('consulcom_factura');
   if(!guardado){
     // datos de ejemplo iniciales

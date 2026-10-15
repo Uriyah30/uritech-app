@@ -32,11 +32,17 @@
   a.tarjeta.mantenimientos{border-left-color:#6a3fb5;}
   a.tarjeta.taller{border-left-color:#e8821a;}
   a.tarjeta.compras{border-left-color:#0f9b8e;}
+  a.tarjeta.ganancia{border-left-color:#b8860b;}
+  a.tarjeta.clientes{border-left-color:#5b6b7f;}
+  a.tarjeta.cotizaciones{border-left-color:#1a8f5a;}
   a.tarjeta .nombre{font-size:17px;font-weight:800;color:var(--azul-900);}
   a.tarjeta.soportes .nombre{color:var(--rojo-600);}
   a.tarjeta.mantenimientos .nombre{color:#6a3fb5;}
   a.tarjeta.taller .nombre{color:#e8821a;}
   a.tarjeta.compras .nombre{color:#0f9b8e;}
+  a.tarjeta.ganancia .nombre{color:#b8860b;}
+  a.tarjeta.clientes .nombre{color:#5b6b7f;}
+  a.tarjeta.cotizaciones .nombre{color:#1a8f5a;}
   a.tarjeta .desc{font-size:13px;color:var(--gris-600);margin-top:4px;}
   a.tarjeta.respaldo{border-left-color:#2e8b57;cursor:pointer;}
   a.tarjeta.respaldo .nombre{color:#2e8b57;}
@@ -64,6 +70,10 @@
       <div class="nombre">Factura</div>
       <div class="desc">Generar facturas de venta y soporte</div>
     </a>
+    <a class="tarjeta cotizaciones" href="Cotizaciones_UrITech.html">
+      <div class="nombre">Cotizaciones</div>
+      <div class="desc">Presupuestos para tus clientes, que pasas a factura con un clic</div>
+    </a>
     <a class="tarjeta soportes" href="Soportes_UrITech.html">
       <div class="nombre">Soportes</div>
       <div class="desc">Gestionar soportes técnicos pendientes</div>
@@ -79,6 +89,14 @@
     <a class="tarjeta compras" href="Compras_UrITech.html">
       <div class="nombre">Compras</div>
       <div class="desc">Registrar compras a proveedores e insumos</div>
+    </a>
+    <a class="tarjeta ganancia" href="Ganancia_UrITech.html">
+      <div class="nombre">Ganancia</div>
+      <div class="desc">Ventas menos compras, mes a mes</div>
+    </a>
+    <a class="tarjeta clientes" href="Clientes_UrITech.html">
+      <div class="nombre">Clientes</div>
+      <div class="desc">Tu lista de clientes guardada, lista para usar en toda la app</div>
     </a>
     <a class="tarjeta respaldo" id="btnRespaldo">
       <div class="nombre">⬇ Respaldo (Excel)</div>
@@ -206,6 +224,16 @@
         };
       });
 
+      // ---- Clientes ----
+      const clientesDoc = await db.collection('estado').doc('clientes').get();
+      const filasClientes = (clientesDoc.exists ? (clientesDoc.data().items || []) : []).map(it=>({
+        "Nombre": it.nombre || "",
+        "Teléfono": it.telefono || "",
+        "Ciudad": it.ciudad || "",
+        "Dirección": it.direccion || "",
+        "Observaciones": it.obs || ""
+      }));
+
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(filasFacturas), "Facturas");
       XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(filasItemsFactura), "Detalle Facturas");
@@ -213,6 +241,7 @@
       XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(filasMant), "Mantenimientos");
       XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(filasTaller), "Taller");
       XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(filasCompras), "Compras");
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(filasClientes), "Clientes");
 
       const hoy = new Date().toISOString().slice(0,10);
       XLSX.writeFile(wb, `Respaldo_UrITech_${hoy}.xlsx`);
