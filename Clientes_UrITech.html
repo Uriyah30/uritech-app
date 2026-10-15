@@ -141,6 +141,24 @@
     tbody td{padding:4px 3px;}
     tr{page-break-inside:avoid;}
   }
+  .hist-col{text-align:center;cursor:pointer;font-size:15px;width:44px;}
+  .hist-col:hover{background:var(--gris-100,#f1f4f8);}
+  .modal-fondo{display:none;position:fixed;inset:0;background:rgba(13,43,82,0.55);z-index:900;align-items:center;justify-content:center;padding:16px;}
+  .modal-fondo.abierto{display:flex;}
+  .modal-caja{background:#fff;border-radius:14px;width:100%;max-width:640px;max-height:86vh;display:flex;flex-direction:column;box-shadow:0 20px 50px rgba(0,0,0,0.3);overflow:hidden;}
+  .modal-header{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;background:var(--azul-900);color:#fff;font-weight:700;font-size:15px;}
+  .modal-cerrar{cursor:pointer;font-size:18px;padding:0 4px;}
+  .modal-lista{padding:14px;overflow:auto;}
+  .hist-resumen{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;}
+  .hist-resumen div{background:var(--gris-100,#f1f4f8);border-radius:10px;padding:10px;text-align:center;}
+  .hist-resumen b{display:block;font-size:16px;color:var(--azul-900);}
+  .hist-resumen span{font-size:11px;color:var(--gris-600);}
+  .hist-sec{margin-top:14px;}
+  .hist-sec h4{margin:0 0 6px;font-size:13px;color:var(--azul-900);text-transform:uppercase;letter-spacing:.04em;}
+  .hist-fila{display:flex;justify-content:space-between;gap:10px;padding:8px 10px;border:1px solid var(--gris-200,#e1e6ee);border-radius:8px;margin-bottom:6px;font-size:13px;}
+  .hist-fila .sub{display:block;font-size:11.5px;color:var(--gris-600);}
+  .hist-vacio{font-size:12.5px;color:var(--gris-600);padding:4px 2px;}
+  .hist-wa{display:inline-block;margin-top:12px;background:#25D366;color:#fff;text-decoration:none;border-radius:8px;padding:9px 16px;font-weight:700;font-size:13px;}
 </style>
 </head>
 <body>
@@ -216,6 +234,7 @@
           <th style="width:110px;">Ciudad</th>
           <th>Dirección</th>
           <th style="width:150px;">Observaciones</th>
+          <th style="width:44px;" title="Historial">📋</th>
           <th style="width:24px;"></th>
         </tr>
       </thead>
@@ -228,6 +247,16 @@
 </div>
 
 <div class="guardado-msg" id="msgGuardado"></div>
+
+<div class="modal-fondo" id="modalHistorial" onclick="if(event.target.id==='modalHistorial')cerrarHistorialCliente()">
+  <div class="modal-caja">
+    <div class="modal-header">
+      <span id="histTitulo">Historial del cliente</span>
+      <span class="modal-cerrar" onclick="cerrarHistorialCliente()">✕</span>
+    </div>
+    <div class="modal-lista" id="histContenido"></div>
+  </div>
+</div>
 
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
@@ -260,6 +289,7 @@ function filaHTML(nombre, telefono, ciudad, direccion, obs){
     <td contenteditable="true">${ciudad}</td>
     <td contenteditable="true">${direccion}</td>
     <td contenteditable="true">${obs}</td>
+    <td class="hist-col" onclick="verHistorial(this)" title="Ver historial">📋</td>
     <td class="fila-borrar" onclick="borrarFila(this)">✕</td>
   </tr>`;
 }
@@ -389,6 +419,67 @@ document.addEventListener('focusout', (e)=>{
     guardarSilencioso();
   }
 });
+
+function escHTML(t){ return String(t==null?"":t).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function normNombre(t){ return String(t||"").trim().replace(/\s+/g," ").toLowerCase(); }
+function copTxt(n){ return "$ " + Math.round(n||0).toLocaleString('es-CO'); }
+function totalDeDatos(d){
+  let sub = 0;
+  (d.items||[]).forEach(it=>{ sub += (parseFloat(it.cantidad)||0) * (parseFloat(it.precio)||0); });
+  return sub * (1 + (parseFloat(d.ivaPct)||0)/100);
+}
+function fechaTxt(f){
+  if(!f) return "sin fecha";
+  const d = new Date(f.length === 10 ? f + "T12:00:00" : f);
+  return isNaN(d) ? f : d.toLocaleDateString('es-CO');
+}
+function cerrarHistorialCliente(){ document.getElementById('modalHistorial').classList.remove('abierto'); }
+
+async function verHistorial(celda){
+  const celdas = celda.closest('tr').querySelectorAll('td');
+  const nombre = celdas[1].textContent.trim();
+  const telefono = celdas[2].textContent.trim();
+  if(!nombre){ alert("Escribe primero el nombre del cliente."); return; }
+  const clave = normNombre(nombre);
+  document.getElementById('histTitulo').textContent = "Historial · " + nombre;
+  const cont = document.getElementById('histContenido');
+  cont.innerHTML = '<div class="hist-vacio">Cargando historial...</div>';
+  document.getElementById('modalHistorial').classList.add('abierto');
+  try{
+    const [fSnap, cSnap, sDoc, tDoc] = await Promise.all([
+      db.collection('facturas').get(),
+      db.collection('cotizaciones').get(),
+      db.collection('estado').doc('soportes').get(),
+      db.collection('estado').doc('taller').get()
+    ]);
+    const facturas = [], cotizaciones = [];
+    fSnap.forEach(d=>{ const r = d.data().datos || {}; if(normNombre(r.cliente) === clave) facturas.push(r); });
+    cSnap.forEach(d=>{ const r = d.data().datos || {}; if(normNombre(r.cliente) === clave) cotizaciones.push(r); });
+    const soportes = ((sDoc.exists ? sDoc.data().items : []) || []).filter(it=>normNombre(it.cliente) === clave);
+    const taller = ((tDoc.exists ? tDoc.data().items : []) || []).filter(it=>normNombre(it.cliente) === clave);
+    facturas.sort((a,b)=>String(b.fecha||"").localeCompare(String(a.fecha||"")));
+    cotizaciones.sort((a,b)=>String(b.fecha||"").localeCompare(String(a.fecha||"")));
+    const totalFact = facturas.reduce((s,d)=>s+totalDeDatos(d),0);
+    const ultima = facturas.length ? facturas[0].fecha : "";
+
+    const filas = (arr, fn)=> arr.length ? arr.map(fn).join("") : '<div class="hist-vacio">Sin registros.</div>';
+    let html = `<div class="hist-resumen">
+      <div><b>${copTxt(totalFact)}</b><span>Total facturado</span></div>
+      <div><b>${facturas.length}</b><span>Facturas</span></div>
+      <div><b>${ultima ? fechaTxt(ultima) : "—"}</b><span>Última factura</span></div></div>`;
+    html += `<div class="hist-sec"><h4>Facturas</h4>${filas(facturas, d=>`<div class="hist-fila"><span><b>${escHTML(d.numero||"s/n")}</b><span class="sub">${fechaTxt(d.fecha)}</span></span><b>${copTxt(totalDeDatos(d))}</b></div>`)}</div>`;
+    html += `<div class="hist-sec"><h4>Cotizaciones</h4>${filas(cotizaciones, d=>`<div class="hist-fila"><span><b>${escHTML(d.numero||"s/n")}</b><span class="sub">${escHTML(d.estado||"Enviada")} · ${fechaTxt(d.fecha)}</span></span><b>${copTxt(totalDeDatos(d))}</b></div>`)}</div>`;
+    html += `<div class="hist-sec"><h4>Soportes</h4>${filas(soportes, it=>`<div class="hist-fila"><span><b>${escHTML(it.equipo||"Equipo")}</b><span class="sub">${escHTML(it.problema||"")} · ${fechaTxt(it.fecha)}</span></span><span>${escHTML(it.estado||"")}</span></div>`)}</div>`;
+    html += `<div class="hist-sec"><h4>Taller</h4>${filas(taller, it=>`<div class="hist-fila"><span><b>${escHTML(it.equipo||"Equipo")}</b><span class="sub">${escHTML(it.falla||"")} · ${fechaTxt(it.fechaIngreso)}</span></span><span>${escHTML(it.estado||"")}</span></div>`)}</div>`;
+    let tel = telefono.replace(/\D/g,"");
+    if(tel.length === 10) tel = "57" + tel;
+    if(tel) html += `<a class="hist-wa" target="_blank" rel="noopener" href="https://wa.me/${tel}">📲 Escribir por WhatsApp</a>`;
+    cont.innerHTML = html;
+  }catch(e){
+    console.error(e);
+    cont.innerHTML = '<div class="hist-vacio">No se pudo cargar el historial. Revisa tu conexión a internet.</div>';
+  }
+}
 
 function iniciarApp(){
   cargarLocal();
