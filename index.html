@@ -34,6 +34,7 @@
   a.tarjeta.compras{border-left-color:#0f9b8e;}
   a.tarjeta.ganancia{border-left-color:#b8860b;}
   a.tarjeta.clientes{border-left-color:#5b6b7f;}
+  a.tarjeta.proveedores{border-left-color:#8a5a2b;}
   a.tarjeta.cotizaciones{border-left-color:#1a8f5a;}
   a.tarjeta .nombre{font-size:17px;font-weight:800;color:var(--azul-900);}
   a.tarjeta.soportes .nombre{color:var(--rojo-600);}
@@ -42,6 +43,7 @@
   a.tarjeta.compras .nombre{color:#0f9b8e;}
   a.tarjeta.ganancia .nombre{color:#b8860b;}
   a.tarjeta.clientes .nombre{color:#5b6b7f;}
+  a.tarjeta.proveedores .nombre{color:#8a5a2b;}
   a.tarjeta.cotizaciones .nombre{color:#1a8f5a;}
   a.tarjeta .desc{font-size:13px;color:var(--gris-600);margin-top:4px;}
   a.tarjeta.respaldo{border-left-color:#2e8b57;cursor:pointer;}
@@ -97,6 +99,10 @@
     <a class="tarjeta clientes" href="Clientes_UrITech.html">
       <div class="nombre">Clientes</div>
       <div class="desc">Tu lista de clientes guardada, lista para usar en toda la app</div>
+    </a>
+    <a class="tarjeta proveedores" href="Proveedores_UrITech.html">
+      <div class="nombre">Proveedores</div>
+      <div class="desc">Tu lista de proveedores, lista para usar en Compras</div>
     </a>
     <a class="tarjeta respaldo" id="btnRespaldo">
       <div class="nombre">⬇ Respaldo (Excel)</div>
@@ -242,6 +248,13 @@
       XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(filasTaller), "Taller");
       XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(filasCompras), "Compras");
       XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(filasClientes), "Clientes");
+      // ---- Proveedores ----
+      const provDoc = await db.collection('estado').doc('proveedores').get();
+      const filasProv = (provDoc.exists ? (provDoc.data().items || []) : []).map(it=>({
+        "Nombre": it.nombre || "", "Teléfono": it.telefono || "", "Ciudad": it.ciudad || "",
+        "Dirección": it.direccion || "", "Observaciones": it.obs || ""
+      }));
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(filasProv), "Proveedores");
 
       const hoy = new Date().toISOString().slice(0,10);
       XLSX.writeFile(wb, `Respaldo_UrITech_${hoy}.xlsx`);
