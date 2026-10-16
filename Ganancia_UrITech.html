@@ -126,6 +126,25 @@
     .toolbar{display:none!important;}
     .hoja{box-shadow:none;border-radius:0;max-width:100%;}
   }
+  tbody tr.fila-mes{cursor:pointer;}
+  tbody tr.fila-mes:hover{background:#eef3fa;}
+  .hint-detalle{font-size:12px;color:var(--gris-600);margin:0 0 8px;text-align:right;}
+  .modal-fondo{display:none;position:fixed;inset:0;background:rgba(13,43,82,0.55);z-index:900;align-items:center;justify-content:center;padding:16px;}
+  .modal-fondo.abierto{display:flex;}
+  .modal-caja{background:#fff;border-radius:14px;width:100%;max-width:620px;max-height:88vh;display:flex;flex-direction:column;box-shadow:0 20px 50px rgba(0,0,0,0.3);overflow:hidden;}
+  .modal-header{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;background:var(--azul-900);color:#fff;font-weight:700;font-size:15px;}
+  .modal-cerrar{cursor:pointer;font-size:18px;padding:0 4px;}
+  .modal-lista{padding:14px;overflow:auto;}
+  .det-sec{margin-bottom:16px;}
+  .det-sec h4{margin:0 0 6px;font-size:13px;color:var(--azul-900);text-transform:uppercase;letter-spacing:.04em;}
+  .det-fila{display:flex;justify-content:space-between;gap:10px;padding:8px 10px;border:1px solid var(--gris-200);border-radius:8px;margin-bottom:6px;font-size:13px;}
+  .det-fila .sub{display:block;font-size:11.5px;color:var(--gris-600);}
+  .det-vacio{font-size:12.5px;color:var(--gris-600);padding:4px 2px;}
+  .det-total{display:flex;justify-content:space-between;padding:6px 10px;font-size:13.5px;border-top:2px solid var(--gris-200);margin-top:4px;}
+  .det-cats{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12px;color:var(--gris-600);padding:2px 10px;}
+  .det-resultado{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;padding:12px;border-radius:10px;background:var(--gris-100);font-size:14px;}
+  .pos{color:var(--verde);}
+  .neg{color:var(--rojo-600);}
 </style>
 </head>
 <body>
@@ -195,6 +214,7 @@
 
   <div class="tabla-wrap">
     <div id="cargando" class="cargando-msg">Cargando datos...</div>
+    <p class="hint-detalle" id="hintDetalle">Toca un mes para ver el detalle de entradas y compras</p>
     <table id="tablaGanancia" style="display:none;">
       <thead>
         <tr>
@@ -209,6 +229,13 @@
   </div>
 
   <div class="franja-final"></div>
+</div>
+
+<div class="modal-fondo" id="modalDetalle" onclick="if(event.target.id==='modalDetalle')cerrarDetalle()">
+  <div class="modal-caja">
+    <div class="modal-header"><span id="detTitulo">Detalle</span><span class="modal-cerrar" onclick="cerrarDetalle()">✕</span></div>
+    <div class="modal-lista" id="detContenido"></div>
+  </div>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
@@ -242,6 +269,49 @@ function etiquetaMes(claveMes){
   return NOMBRES_MES[parseInt(mes,10)-1] + ' ' + anio;
 }
 
+let facturasDetalle = {};
+let comprasDetalle = {};
+
+function numCOP(v){
+  // acepta "85000", "85.000" o "$ 85.000,50"
+  const t = String(v == null ? "" : v).replace(/[^0-9,.-]/g,"");
+  if(!t) return 0;
+  const limpio = t.indexOf(",") >= 0 ? t.replace(/\./g,"").replace(",",".") : (/^-?\d{1,3}(\.\d{3})+$/.test(t) ? t.replace(/\./g,"") : t);
+  return parseFloat(limpio) || 0;
+}
+function totalDeFactura(datos){
+  let sub = 0;
+  (datos.items || []).forEach(it=>{ sub += numCOP(it.cantidad) * numCOP(it.precio); });
+  return sub * (1 + (parseFloat(datos.ivaPct) || 0) / 100);
+}
+function esc(t){ return String(t==null?"":t).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function fechaCorta(f){
+  const d = new Date(f + "T12:00:00");
+  return isNaN(d) ? f : d.toLocaleDateString('es-CO');
+}
+function cerrarDetalle(){ document.getElementById('modalDetalle').classList.remove('abierto'); }
+function verDetalle(mes){
+  const fact = (facturasDetalle[mes] || []).slice().sort((a,b)=>b.fecha.localeCompare(a.fecha));
+  const comp = (comprasDetalle[mes] || []).slice().sort((a,b)=>b.fecha.localeCompare(a.fecha));
+  const totV = fact.reduce((s,x)=>s+x.total,0);
+  const totC = comp.reduce((s,x)=>s+x.total,0);
+  const gan = totV - totC;
+  const porCat = {};
+  comp.forEach(x=>{ porCat[x.categoria] = (porCat[x.categoria]||0) + x.total; });
+  document.getElementById('detTitulo').textContent = "Detalle · " + etiquetaMes(mes);
+  let h = '<div class="det-sec"><h4>Entradas (facturas)</h4>';
+  h += fact.length ? fact.map(x=>`<div class="det-fila"><span><b>${esc(x.numero)}</b> · ${esc(x.cliente) || 'sin cliente'}<span class="sub">${fechaCorta(x.fecha)}</span></span><b class="pos">${formatoMoneda(x.total)}</b></div>`).join("") : '<div class="det-vacio">Sin facturas este mes.</div>';
+  h += `<div class="det-total"><span>Total entradas</span><b class="pos">${formatoMoneda(totV)}</b></div></div>`;
+  h += '<div class="det-sec"><h4>Compras</h4>';
+  h += comp.length ? comp.map(x=>`<div class="det-fila"><span><b>${esc(x.producto) || 'Compra'}</b> · ${esc(x.proveedor)}<span class="sub">${fechaCorta(x.fecha)} · ${esc(x.categoria)} · ${x.cant} und.</span></span><b class="neg">${formatoMoneda(x.total)}</b></div>`).join("") : '<div class="det-vacio">Sin compras este mes.</div>';
+  const cats = Object.keys(porCat);
+  if(cats.length > 1) h += '<div class="det-cats">' + cats.map(c=>`<span>${esc(c)}: <b>${formatoMoneda(porCat[c])}</b></span>`).join("") + '</div>';
+  h += `<div class="det-total"><span>Total compras</span><b class="neg">${formatoMoneda(totC)}</b></div></div>`;
+  h += `<div class="det-resultado ${gan>=0?'pos':'neg'}"><span>Ganancia del mes</span><b>${formatoMoneda(totV)} − ${formatoMoneda(totC)} = ${formatoMoneda(gan)}</b></div>`;
+  document.getElementById('detContenido').innerHTML = h;
+  document.getElementById('modalDetalle').classList.add('abierto');
+}
+
 async function cargarGanancia(){
   document.getElementById('cargando').style.display = 'block';
   document.getElementById('tablaGanancia').style.display = 'none';
@@ -249,27 +319,36 @@ async function cargarGanancia(){
     // ---- Ventas (de facturas) ----
     const facturasSnap = await db.collection('facturas').get();
     const ventasPorMes = {};
+    facturasDetalle = {};
     facturasSnap.forEach(doc=>{
       const d = doc.data();
       const datos = d.datos || {};
       const fecha = datos.fecha || '';
       if(!fecha) return;
       const mes = fecha.slice(0,7);
-      const total = parseFloat(d.total) || 0;
+      const total = totalDeFactura(datos);
       ventasPorMes[mes] = (ventasPorMes[mes] || 0) + total;
+      (facturasDetalle[mes] = facturasDetalle[mes] || []).push({
+        numero: datos.numero || 's/n', cliente: datos.cliente || '', fecha, total
+      });
     });
 
     // ---- Compras ----
     const comprasDoc = await db.collection('estado').doc('compras').get();
     const comprasPorMes = {};
+    comprasDetalle = {};
     if(comprasDoc.exists){
       (comprasDoc.data().items || []).forEach(it=>{
         const fecha = it.fecha || '';
         if(!fecha) return;
         const mes = fecha.slice(0,7);
-        const cant = parseFloat(it.cantidad) || 0;
-        const precio = parseFloat(it.precioUnitario) || 0;
+        const cant = numCOP(it.cantidad);
+        const precio = numCOP(it.precioUnitario);
         comprasPorMes[mes] = (comprasPorMes[mes] || 0) + (cant*precio);
+        (comprasDetalle[mes] = comprasDetalle[mes] || []).push({
+          proveedor: it.proveedor || '', producto: it.producto || '', fecha,
+          categoria: it.categoria || 'Sin categoría', cant, total: cant*precio
+        });
       });
     }
 
@@ -305,7 +384,7 @@ async function cargarGanancia(){
       const compras = comprasPorMes[mes] || 0;
       const ganancia = ventas - compras;
       const esActual = mes === mesActualClave;
-      cuerpo.insertAdjacentHTML('beforeend', `<tr class="${esActual?'mes-actual':''}">
+      cuerpo.insertAdjacentHTML('beforeend', `<tr class="${esActual?'mes-actual':''} fila-mes" onclick="verDetalle('${mes}')" title="Ver detalle">
         <td>${etiquetaMes(mes)}</td>
         <td class="col-ventas">${formatoMoneda(ventas)}</td>
         <td class="col-compras">${formatoMoneda(compras)}</td>
