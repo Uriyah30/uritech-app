@@ -34,6 +34,7 @@
   a.tarjeta.compras{border-left-color:#0f9b8e;}
   a.tarjeta.ganancia{border-left-color:#b8860b;}
   a.tarjeta.clientes{border-left-color:#5b6b7f;}
+  a.tarjeta.envios{border-left-color:#c2410c;}
   a.tarjeta.proveedores{border-left-color:#8a5a2b;}
   a.tarjeta.cotizaciones{border-left-color:#1a8f5a;}
   a.tarjeta .nombre{font-size:17px;font-weight:800;color:var(--azul-900);}
@@ -43,6 +44,7 @@
   a.tarjeta.compras .nombre{color:#0f9b8e;}
   a.tarjeta.ganancia .nombre{color:#b8860b;}
   a.tarjeta.clientes .nombre{color:#5b6b7f;}
+  a.tarjeta.envios .nombre{color:#c2410c;}
   a.tarjeta.proveedores .nombre{color:#8a5a2b;}
   a.tarjeta.cotizaciones .nombre{color:#1a8f5a;}
   a.tarjeta .desc{font-size:13px;color:var(--gris-600);margin-top:4px;}
@@ -103,6 +105,10 @@
     <a class="tarjeta proveedores" href="Proveedores_UrITech.html">
       <div class="nombre">Proveedores</div>
       <div class="desc">Tu lista de proveedores, lista para usar en Compras</div>
+    </a>
+    <a class="tarjeta envios" href="Envios_UrITech.html">
+      <div class="nombre">Envíos</div>
+      <div class="desc">Rótulos de envío para imprimir y registro de tus paquetes</div>
     </a>
     <a class="tarjeta respaldo" id="btnRespaldo">
       <div class="nombre">⬇ Respaldo (Excel)</div>
@@ -255,6 +261,19 @@
         "Dirección": it.direccion || "", "Observaciones": it.obs || ""
       }));
       XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(filasProv), "Proveedores");
+
+      // ---- Envíos ----
+      const enviosSnap = await db.collection('envios').get();
+      const filasEnvios = [];
+      enviosSnap.forEach(doc=>{
+        const d = (doc.data().datos) || {};
+        filasEnvios.push({
+          "Fecha": d.fecha || "", "Destinatario": d.pNombre || "", "Teléfono": d.pTel || "",
+          "Dirección": d.pDir || "", "Ciudad": d.pCiudad || "", "Transportadora": d.transportadora || "",
+          "N.º guía": d.guia || "", "Contenido": d.contenido || "", "Estado": d.estado || "", "Observaciones": d.obs || ""
+        });
+      });
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(filasEnvios), "Envíos");
 
       const hoy = new Date().toISOString().slice(0,10);
       XLSX.writeFile(wb, `Respaldo_UrITech_${hoy}.xlsx`);
