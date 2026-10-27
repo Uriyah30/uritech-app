@@ -341,22 +341,37 @@
   .detalle-envio .col + .col{border-left:1px solid var(--gris-200);}
   .bloque-rotulo{padding:18px 28px 24px;border-top:1px solid var(--gris-200);}
   .rotulo-titulo{font-size:12px;color:var(--gris-600);font-weight:700;letter-spacing:.05em;text-transform:uppercase;margin-bottom:8px;}
-  .rotulo{border:1.5px solid #222;border-radius:4px;padding:22px 24px;font-family:Cambria,Georgia,'Times New Roman',serif;font-size:21px;line-height:1.65;color:#111;background:#fff;}
-  .rotulo b{font-weight:700;}
-  .rotulo .para i{font-style:italic;}
-  .rotulo .de{margin:18px 0 0 36%;font-weight:700;}
+  .rotulo{border:2px solid #0d2b52;border-radius:10px;overflow:hidden;font-family:Cambria,Georgia,'Times New Roman',serif;font-size:21px;line-height:1.6;color:#111;background:#fff;}
+  .rot-head{display:flex;align-items:center;gap:14px;padding:12px 18px;background:#fff;border-bottom:3px solid #1660a8;}
+  .rot-head img{height:46px;width:auto;border-radius:6px;display:block;}
+  .rot-marca{font-family:'Segoe UI',Arial,sans-serif;line-height:1.15;}
+    .rot-marca span{display:block;font-size:10.5px;color:#5b6b7f;letter-spacing:.08em;text-transform:uppercase;max-width:190px;}
+  .rot-tag{margin-left:auto;font-family:'Segoe UI',Arial,sans-serif;font-weight:800;font-size:18px;letter-spacing:.14em;color:#fff;background:linear-gradient(100deg,#1660a8,#d62b2b);padding:8px 18px;border-radius:8px;}
+  .rot-body{padding:16px 20px 12px;}
+  .rotulo .para{border-left:6px solid #1660a8;padding-left:14px;}
+  .rotulo .para b{color:#1660a8;}
+  .rotulo .para i{font-style:italic;font-weight:600;}
+  .rotulo .de{margin:16px 0 0 34%;padding:8px 14px;border-left:6px solid #d62b2b;background:#f6f8fb;border-radius:0 8px 8px 0;font-weight:700;font-size:.92em;}
+  .rotulo .de b{color:#d62b2b;}
+  .rot-extra{padding:7px 20px;background:#eef3fa;border-top:1px solid #d5dde8;font-family:'Segoe UI',Arial,sans-serif;font-size:13px;color:#33475e;}
+  .rot-foot{height:10px;background:linear-gradient(90deg,#1660a8,#d62b2b);}
   .rotulo .vacio{color:#b5bcc7;}
   @media (max-width:640px){
     .detalle-envio{grid-template-columns:1fr;}
     .detalle-envio .col + .col{border-left:none;border-top:1px solid var(--gris-200);}
-    .rotulo{font-size:15px;padding:14px;}
-    .rotulo .de{margin-left:12%;}
+    .rotulo{font-size:15px;}
+    .rot-head img{height:36px;}
+    .rot-tag{font-size:13px;padding:6px 12px;}
+    .rot-marca span{font-size:9px;max-width:110px;}
+    .rotulo .de{margin-left:10%;}
   }
   @media print{
     body.solo-rotulo .encabezado, body.solo-rotulo .meta, body.solo-rotulo .detalle-envio,
     body.solo-rotulo .franja-final, body.solo-rotulo .rotulo-titulo{display:none!important;}
     body.solo-rotulo .bloque-rotulo{border:none;padding:0;}
-    body.solo-rotulo .rotulo{font-size:22px;border:2px solid #000;}
+    #btnLogout{display:none!important;}
+    body.solo-rotulo .rotulo{font-size:22px;}
+    body.solo-rotulo #btnLogout{display:none!important;}
     body.solo-rotulo .rotulo .vacio{color:transparent;}
   }
 </style>
@@ -510,20 +525,30 @@ function linea(etq, val, cursiva){
 function actualizar(){
   const d = recoger();
   const ciudadRem = String(d.dCiudad||"").trim().toUpperCase();
+  const extra = [d.transportadora, d.guia ? 'Guía N.º ' + d.guia : ''].map(x=>String(x||'').trim()).filter(Boolean).join('  ·  ');
   $('rotulo').innerHTML =
-    '<div class="para">'+
-      linea('PARA', d.pNombre, true)+
-      linea('TELEFONO', d.pTel)+
-      linea('DIRECCION', d.pDir)+
-      linea('CEDULA', d.pCed)+
-      linea('CIUDAD', d.pCiudad)+
+    '<div class="rot-head">'+
+      '<img src="logo.png" alt="UR ITECH">'+
+      '<div class="rot-marca"><span>Soporte de impresoras y computadores</span></div>'+
+      '<div class="rot-tag">ENVÍO</div>'+
     '</div>'+
-    '<div class="de">'+
-      linea('DE', String(d.dNombre||"").toUpperCase())+
-      linea('TELEFONO', d.dTel)+
-      linea('CEDULA', d.dCed)+
-      '<div>'+(ciudadRem ? esc(ciudadRem) : '<span class="vacio">________</span>')+'</div>'+
-    '</div>';
+    '<div class="rot-body">'+
+      '<div class="para">'+
+        linea('PARA', d.pNombre, true)+
+        linea('TELEFONO', d.pTel)+
+        linea('DIRECCION', d.pDir)+
+        linea('CEDULA', d.pCed)+
+        linea('CIUDAD', d.pCiudad)+
+      '</div>'+
+      '<div class="de">'+
+        linea('DE', String(d.dNombre||"").toUpperCase())+
+        linea('TELEFONO', d.dTel)+
+        linea('CEDULA', d.dCed)+
+        '<div>'+(ciudadRem ? esc(ciudadRem) : '<span class="vacio">________</span>')+'</div>'+
+      '</div>'+
+    '</div>'+
+    (extra ? '<div class="rot-extra">'+esc(extra)+'</div>' : '')+
+    '<div class="rot-foot"></div>';
   try{ localStorage.setItem('uritech_envio', JSON.stringify({id: envioId, datos: d})); }catch(e){}
 }
 
