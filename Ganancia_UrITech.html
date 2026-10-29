@@ -354,6 +354,24 @@ async function cargarGanancia(){
       });
     }
 
+    // ---- Garantías: costo asumido se resta como gasto ----
+    try{
+      const garDoc = await db.collection('estado').doc('garantias').get();
+      if(garDoc.exists){
+        (garDoc.data().items || []).forEach(it=>{
+          const costo = numCOP(it.costo);
+          if(!(costo > 0)) return;
+          const fecha = it.fechaReclamo || new Date().toLocaleDateString('en-CA');
+          const mes = fecha.slice(0,7);
+          comprasPorMes[mes] = (comprasPorMes[mes] || 0) + costo;
+          (comprasDetalle[mes] = comprasDetalle[mes] || []).push({
+            proveedor: it.proveedor || 'Garantía', producto: 'Garantía: ' + (it.producto || '') + (it.falla ? ' - ' + it.falla : ''),
+            fecha, categoria: 'Garantías', cant: 1, total: costo
+          });
+        });
+      }
+    }catch(e){ console.error(e); }
+
     // ---- Construir lista de meses: últimos 12 + cualquiera con datos ----
     const todosMeses = new Set();
     Object.keys(ventasPorMes).forEach(m=>todosMeses.add(m));
