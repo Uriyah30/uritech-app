@@ -35,6 +35,8 @@
   a.tarjeta.ganancia{border-left-color:#b8860b;}
   a.tarjeta.clientes{border-left-color:#5b6b7f;}
   a.tarjeta.envios{border-left-color:#c2410c;}
+  a.tarjeta.garantias{border-left-color:#0f766e;}
+  a.tarjeta.garantias .nombre{color:#0f766e;}
   a.tarjeta.proveedores{border-left-color:#8a5a2b;}
   a.tarjeta.cotizaciones{border-left-color:#1a8f5a;}
   a.tarjeta .nombre{font-size:17px;font-weight:800;color:var(--azul-900);}
@@ -109,6 +111,10 @@
     <a class="tarjeta envios" href="Envios_UrITech.html">
       <div class="nombre">Envíos</div>
       <div class="desc">Rótulos de envío para imprimir y registro de tus paquetes</div>
+    </a>
+    <a class="tarjeta garantias" href="Garantias_UrITech.html">
+      <div class="nombre">Garantías</div>
+      <div class="desc">Vencimiento de garantías, reclamos al proveedor y certificado</div>
     </a>
     <a class="tarjeta respaldo" id="btnRespaldo">
       <div class="nombre">⬇ Respaldo (Excel)</div>
@@ -274,6 +280,16 @@
         });
       });
       XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(filasEnvios), "Envíos");
+
+      // ---- Garantías ----
+      const garDoc = await db.collection('estado').doc('garantias').get();
+      const filasGar = (garDoc.exists ? (garDoc.data().items || []) : []).map(it=>({
+        "Cliente": it.cliente || "", "Teléfono": it.telefono || "", "Producto": it.producto || "",
+        "Factura": it.factura || "", "Meses": it.meses || "", "Fecha venta": it.fechaVenta || "",
+        "Fecha reclamo": it.fechaReclamo || "", "Estado reclamo": it.reclamo || "", "Falla": it.falla || "",
+        "Proveedor": it.proveedor || "", "Costo asumido": it.costo || ""
+      }));
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(filasGar), "Garantías");
 
       const hoy = new Date().toISOString().slice(0,10);
       XLSX.writeFile(wb, `Respaldo_UrITech_${hoy}.xlsx`);
