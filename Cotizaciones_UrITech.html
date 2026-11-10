@@ -414,6 +414,7 @@
       <div class="campo"><label>Ciudad:</label><input id="ciudad" value="Medellín"></div>
       <div class="campo"><label>Dirección:</label><input id="direccion" value=""></div>
       <div class="campo"><label>Teléfono:</label><input id="telefono" value="320 640 1529"></div>
+      <div class="campo"><label>NIT / C.C.:</label><input id="nit" value=""></div>
     </div>
     <div class="col">
       <div class="campo"><label>N.º cotización:</label><input id="numero" value="COT-001"></div>
@@ -677,6 +678,7 @@ function recogerDatos(){
     ciudad: document.getElementById('ciudad').value,
     direccion: document.getElementById('direccion').value,
     telefono: document.getElementById('telefono').value,
+    nit: document.getElementById('nit').value,
     numero: document.getElementById('numero').value,
     fecha: document.getElementById('fecha').value,
     estado: document.getElementById('estado').value,
@@ -797,6 +799,7 @@ function abrirSelectorCliente(){
         document.getElementById('ciudad').value = it.ciudad || "";
         document.getElementById('direccion').value = it.direccion || "";
         document.getElementById('telefono').value = it.telefono || "";
+        document.getElementById('nit').value = it.nit || "";
         cerrarSelectorCliente();
         guardarLocal();
       });
@@ -842,6 +845,7 @@ function cargarDatos(d){
   document.getElementById('ciudad').value = d.ciudad || "";
   document.getElementById('direccion').value = d.direccion || "";
   document.getElementById('telefono').value = d.telefono || "";
+  document.getElementById('nit').value = d.nit || "";
   document.getElementById('numero').value = d.numero || "COT-001";
   document.getElementById('fecha').value = d.fecha || "";
   document.getElementById('estado').value = d.estado || "Enviada";
@@ -898,6 +902,7 @@ function nuevaCotizacion(){
     document.getElementById('ciudad').value = "";
     document.getElementById('direccion').value = "";
     document.getElementById('telefono').value = "";
+    document.getElementById('nit').value = "";
     document.getElementById('numero').value = proximoNumero;
     document.getElementById('fecha').valueAsDate = new Date();
     document.getElementById('estado').value = "Enviada";
@@ -913,7 +918,7 @@ function nuevaCotizacion(){
 function enviarAFactura(datos){
   const paquete = {
     cliente: datos.cliente || "", ciudad: datos.ciudad || "",
-    direccion: datos.direccion || "", telefono: datos.telefono || "",
+    direccion: datos.direccion || "", telefono: datos.telefono || "", nit: datos.nit || "",
     nequiNumero: datos.nequiNumero || "", bancolombiaNumero: datos.bancolombiaNumero || "",
     ivaPct: datos.ivaPct || 0, items: datos.items || [], desde: datos.numero || ""
   };

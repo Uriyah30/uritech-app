@@ -412,6 +412,7 @@
       <div class="campo"><label>Ciudad:</label><input id="ciudad" value="Medellín"></div>
       <div class="campo"><label>Dirección:</label><input id="direccion" value=""></div>
       <div class="campo"><label>Teléfono:</label><input id="telefono" value="320 640 1529"></div>
+      <div class="campo"><label>NIT / C.C.:</label><input id="nit" value=""></div>
     </div>
     <div class="col">
       <div class="campo"><label>N.º factura:</label><input id="numero" value="001"></div>
@@ -675,6 +676,7 @@ function recogerDatos(){
     ciudad: document.getElementById('ciudad').value,
     direccion: document.getElementById('direccion').value,
     telefono: document.getElementById('telefono').value,
+    nit: document.getElementById('nit').value,
     numero: document.getElementById('numero').value,
     fecha: document.getElementById('fecha').value,
     vencimiento: document.getElementById('vencimiento').value,
@@ -794,6 +796,7 @@ function abrirSelectorCliente(){
         document.getElementById('ciudad').value = it.ciudad || "";
         document.getElementById('direccion').value = it.direccion || "";
         document.getElementById('telefono').value = it.telefono || "";
+        document.getElementById('nit').value = it.nit || "";
         cerrarSelectorCliente();
         guardarLocal();
       });
@@ -839,6 +842,7 @@ function cargarDatos(d){
   document.getElementById('ciudad').value = d.ciudad || "";
   document.getElementById('direccion').value = d.direccion || "";
   document.getElementById('telefono').value = d.telefono || "";
+  document.getElementById('nit').value = d.nit || "";
   document.getElementById('numero').value = d.numero || "001";
   document.getElementById('fecha').value = d.fecha || "";
   document.getElementById('vencimiento').value = d.vencimiento || "";
@@ -864,7 +868,7 @@ function cargarDesdeCotizacion(){
   localStorage.removeItem('uritech_desde_cotizacion');
   siguienteNumeroFactura().then(num=>{
     cargarDatos({
-      cliente: p.cliente, ciudad: p.ciudad, direccion: p.direccion, telefono: p.telefono,
+      cliente: p.cliente, ciudad: p.ciudad, direccion: p.direccion, telefono: p.telefono, nit: p.nit,
       numero: num, fecha: new Date().toISOString().slice(0,10), vencimiento: "", vendedor: "",
       nequiNumero: p.nequiNumero, bancolombiaNumero: p.bancolombiaNumero, ivaPct: p.ivaPct,
       observaciones: "Recibí a satisfacción.", items: p.items
@@ -925,6 +929,7 @@ function nuevaFactura(){
     document.getElementById('ciudad').value = "";
     document.getElementById('direccion').value = "";
     document.getElementById('telefono').value = "";
+    document.getElementById('nit').value = "";
     document.getElementById('numero').value = proximoNumero;
     document.getElementById('fecha').valueAsDate = new Date();
     document.getElementById('vencimiento').value = "";
