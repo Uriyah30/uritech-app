@@ -247,6 +247,7 @@
       const filasClientes = (clientesDoc.exists ? (clientesDoc.data().items || []) : []).map(it=>({
         "Nombre": it.nombre || "",
         "Teléfono": it.telefono || "",
+        "NIT / C.C.": it.nit || "",
         "Ciudad": it.ciudad || "",
         "Dirección": it.direccion || "",
         "Observaciones": it.obs || ""
