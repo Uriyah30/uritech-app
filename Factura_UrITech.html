@@ -332,6 +332,12 @@
     td[contenteditable], input, textarea{border:none!important;}
   }
   @media print{#btnLogout{display:none!important;}}
+  @media print{
+    .campo button, .campo input[type="date"]::-webkit-calendar-picker-indicator, input[type="date"]::-webkit-calendar-picker-indicator{display:none!important;}
+    textarea{resize:none!important;}
+  }
+  body.generando-pdf .campo button, body.generando-pdf input[type="date"]::-webkit-calendar-picker-indicator{display:none!important;}
+  body.generando-pdf textarea{resize:none!important;}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
@@ -629,6 +635,7 @@ async function enviarWhatsApp(){
 
   try{
     const hoja = document.getElementById('hoja');
+    document.body.classList.add('generando-pdf');
     const blob = await html2pdf().set({
       margin: 0,
       filename: nombreArchivo,
@@ -636,6 +643,7 @@ async function enviarWhatsApp(){
       html2canvas: { scale: 2, useCORS: true, scrollY: 0 },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
     }).from(hoja).outputPdf('blob');
+    document.body.classList.remove('generando-pdf');
 
     const archivo = new File([blob], nombreArchivo, { type: 'application/pdf' });
     if(navigator.canShare && navigator.canShare({ files: [archivo] })){
@@ -656,6 +664,7 @@ async function enviarWhatsApp(){
     console.error(e);
     window.open(urlTexto, '_blank'); // respaldo: solo texto
   }finally{
+    document.body.classList.remove('generando-pdf');
     if(btn){ btn.disabled = false; btn.textContent = textoBtn; }
   }
 }
