@@ -141,6 +141,7 @@
     tbody td{padding:4px 3px;}
     tr{page-break-inside:avoid;}
   }
+  @media print{#btnLogout{display:none!important;}}
 </style>
 </head>
 <body>
@@ -215,6 +216,7 @@
           <th style="width:28px;">ID</th>
           <th style="width:170px;">Nombre</th>
           <th style="width:120px;">Teléfono</th>
+          <th style="width:120px;">NIT / C.C.</th>
           <th style="width:110px;">Ciudad</th>
           <th>Dirección</th>
           <th style="width:150px;">Observaciones</th>
@@ -253,12 +255,13 @@
 <script>
 let contadorId = 0;
 
-function filaHTML(nombre, telefono, ciudad, direccion, obs){
+function filaHTML(nombre, telefono, ciudad, direccion, obs, nit){
   contadorId++;
   return `<tr data-id="${contadorId}">
     <td class="id-col">${contadorId}</td>
     <td contenteditable="true">${nombre}</td>
     <td contenteditable="true">${telefono}</td>
+    <td contenteditable="true">${nit||""}</td>
     <td contenteditable="true">${ciudad}</td>
     <td contenteditable="true">${direccion}</td>
     <td contenteditable="true">${obs}</td>
@@ -266,9 +269,9 @@ function filaHTML(nombre, telefono, ciudad, direccion, obs){
   </tr>`;
 }
 
-function agregarFila(nombre="", telefono="", ciudad="", direccion="", obs=""){
+function agregarFila(nombre="", telefono="", ciudad="", direccion="", obs="", nit=""){
   document.getElementById('cuerpoTabla').insertAdjacentHTML('beforeend',
-    filaHTML(nombre, telefono, ciudad, direccion, obs));
+    filaHTML(nombre, telefono, ciudad, direccion, obs, nit));
   actualizarContadores();
   guardarSilencioso();
 }
@@ -285,7 +288,7 @@ function actualizarContadores(){
   const ciudades = new Set();
   filas.forEach(fila=>{
     const celdas = fila.querySelectorAll('td');
-    const ciudad = celdas[3].textContent.trim();
+    const ciudad = celdas[4].textContent.trim();
     if(ciudad) ciudades.add(ciudad.toLowerCase());
   });
   document.getElementById('contTotal').textContent = filas.length;
@@ -298,7 +301,8 @@ function aplicarBusqueda(){
     const celdas = fila.querySelectorAll('td');
     const nombre = celdas[1].textContent.toLowerCase();
     const telefono = celdas[2].textContent.toLowerCase();
-    const coincide = !texto || nombre.includes(texto) || telefono.includes(texto);
+    const nit = celdas[3].textContent.toLowerCase();
+    const coincide = !texto || nombre.includes(texto) || telefono.includes(texto) || nit.includes(texto);
     fila.classList.toggle('oculta', !coincide);
   });
 }
@@ -310,9 +314,10 @@ function recogerDatos(){
     items.push({
       nombre: celdas[1].textContent,
       telefono: celdas[2].textContent,
-      ciudad: celdas[3].textContent,
-      direccion: celdas[4].textContent,
-      obs: celdas[5].textContent
+      nit: celdas[3].textContent,
+      ciudad: celdas[4].textContent,
+      direccion: celdas[5].textContent,
+      obs: celdas[6].textContent
     });
   });
   return items;
@@ -363,7 +368,7 @@ function cargarDesdeItems(items, primeraVez){
     agregarFila("Distribuidora Tecno", "", "Medellín", "", "");
   } else if(items && items.length > 0){
     items.forEach(it=>{
-      agregarFila(it.nombre, it.telefono, it.ciudad, it.direccion, it.obs);
+      agregarFila(it.nombre, it.telefono, it.ciudad, it.direccion, it.obs, it.nit);
     });
   }
   actualizarContadores();

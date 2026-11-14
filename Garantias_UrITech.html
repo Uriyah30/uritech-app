@@ -206,6 +206,7 @@
     body.solo-cert #modalCert .modal-header, body.solo-cert .cert-acciones{display:none!important;}
     #btnLogout{display:none!important;}
   }
+  @media print{#btnLogout{display:none!important;}}
 </style>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
@@ -534,8 +535,12 @@ async function crearEnvio(btn){
   };
   try{
     const doc = await db.collection('estado').doc('proveedores').get();
-    const p = (doc.exists ? (doc.data().items || []) : []).find(x=>norm(x.nombre) === norm(d.proveedor));
-    if(p){ envio.pNombre = p.nombre || d.proveedor; envio.pTel = p.telefono || ""; envio.pDir = p.direccion || ""; envio.pCiudad = p.ciudad || ""; }
+    let p = (doc.exists ? (doc.data().items || []) : []).find(x=>norm(x.nombre) === norm(d.proveedor));
+    if(!p){
+      const dc = await db.collection('estado').doc('clientes').get();
+      p = (dc.exists ? (dc.data().items || []) : []).find(x=>norm(x.nombre) === norm(d.proveedor));
+    }
+    if(p){ envio.pNombre = p.nombre || d.proveedor; envio.pTel = p.telefono || ""; envio.pDir = p.direccion || ""; envio.pCiudad = p.ciudad || ""; envio.pCed = p.nit || ""; }
   }catch(e){ console.error(e); }
   try{ localStorage.setItem('uritech_envio', JSON.stringify({id: null, datos: envio})); }catch(e){}
   location.href = 'Envios_UrITech.html';

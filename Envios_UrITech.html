@@ -374,6 +374,7 @@
     body.solo-rotulo #btnLogout{display:none!important;}
     body.solo-rotulo .rotulo .vacio{color:transparent;}
   }
+  @media print{#btnLogout{display:none!important;}}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
@@ -664,7 +665,7 @@ function abrirSelectorCliente(){
       const b = document.createElement('button'); b.className = "btn-abrir"; b.textContent = "Usar";
       b.addEventListener('click', ()=>{
         $('pNombre').value = it.nombre || ""; $('pTel').value = it.telefono || "";
-        $('pCiudad').value = it.ciudad || ""; $('pDir').value = it.direccion || "";
+        $('pCiudad').value = it.ciudad || ""; $('pDir').value = it.direccion || ""; $('pCed').value = it.nit || "";
         actualizar(); cerrarSelectorCliente();
       });
       acc.appendChild(b); div.appendChild(info); div.appendChild(acc); lista.appendChild(div);
